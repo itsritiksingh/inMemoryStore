@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
 	"github.com/itsritiksingh/inMemoryStore/pkg/store"
 )
 
+var ssfolder = filepath.Join("pkg","sstable","tables")
+
 func InitTable(s *store.Store) {
-	tick := time.NewTicker(10 * time.Second)
+	tick := time.NewTicker(1 * time.Second)
 
 	for {
 		<-tick.C
@@ -41,7 +44,8 @@ func CreateTable(s *store.Store) {
 }
 
 func writeSS(tmp map[string]string, keySlice []string) error {
-	fileName := fmt.Sprintf("./pkg/sstable/ss log %v_%v_%v", time.Now().Local().Hour(), time.Now().Local().Minute(), time.Now().Local().Second())
+	os.MkdirAll(ssfolder,os.ModePerm)
+	fileName := fmt.Sprintf("%s/ss log %v_%v_%v",ssfolder, time.Now().Local().Hour(), time.Now().Local().Minute(), time.Now().Local().Second())
 	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)

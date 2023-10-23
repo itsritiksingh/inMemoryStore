@@ -3,23 +3,20 @@ package store
 import (
 	"errors"
 	"fmt"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/itsritiksingh/inMemoryStore/pkg/wal"
 )
 
 type Store struct {
 	Store map[string]string
-	wal *wal.Wal
 	Mu  *sync.RWMutex
 }
 
 func Init() *Store {
-	w := wal.Init()
 	return &Store{
 		Store: make(map[string]string),
-		wal: w,
 		Mu: &sync.RWMutex{},
 	}
 }
@@ -35,6 +32,18 @@ func (s *Store) Get(key string) (string, error) {
 	return val, nil
 }
 
+func (s *Store) GetAllKeys() ([]string){
+	s.Mu.RLock()
+	defer s.Mu.RUnlock()
+
+	keys := make([]string, 0, len(s.Store))
+    for k := range s.Store {
+        keys = append(keys, k)
+    }
+
+	return keys
+}
+
 func (s *Store) Put(key string,value string) (bool,error){
 	s.Mu.Lock()
 	defer s.Mu.Unlock()
@@ -44,7 +53,7 @@ func (s *Store) Put(key string,value string) (bool,error){
 		return false, errors.New("key already exist")
 	}
 	s.Store[key] = value
-	s.wal.Write([]byte(fmt.Sprintf("%v %v %v %v",key,value,false,time.Now().UnixMicro())))
+	wal.Write([]byte(fmt.Sprintf("%v %v %v %v\n",key,value,false,time.Now().UnixMicro())))
 	return true,nil
 }
 
@@ -52,7 +61,7 @@ func (s *Store) Upsert(key string,value string) (bool , error){
 	s.Mu.Lock()
 	defer s.Mu.Unlock()
 	s.Store[key] = value
-	s.wal.Write([]byte(fmt.Sprintf("%v %v %v %v",key,value,false,time.Now().UnixMicro())))
+	wal.Write([]byte(fmt.Sprintf("%v %v %v %v\n",key,value,false,time.Now().UnixMicro())))
 	return true , nil
 }
 
@@ -60,6 +69,6 @@ func (s *Store) Delete(key string,value string) (bool,error){
 	s.Mu.Lock()
 	defer s.Mu.Unlock()
 	delete(s.Store,key)
-	s.wal.Write([]byte(fmt.Sprintf("%v %v %v %v",key,value,true,time.Now().UnixMicro())))
+	wal.Write([]byte(fmt.Sprintf("%v %v %v %v\n",key,value,true,time.Now().UnixMicro())))
 	return true, nil
 }
