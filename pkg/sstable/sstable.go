@@ -14,7 +14,7 @@ import (
 var ssfolder = filepath.Join("pkg","sstable","tables")
 
 func InitTable(s *store.Store) {
-	tick := time.NewTicker(1 * time.Second)
+	tick := time.NewTicker(10 * time.Minute)
 
 	for {
 		<-tick.C
