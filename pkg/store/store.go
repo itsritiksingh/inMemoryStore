@@ -4,25 +4,30 @@ import (
 	"errors"
 	"fmt"
 	"time"
+	"sync"
 
 	"github.com/itsritiksingh/inMemoryStore/pkg/wal"
 )
 
 type Store struct {
-	store map[string]string
+	Store map[string]string
 	wal *wal.Wal
+	Mu  *sync.RWMutex
 }
 
 func Init() *Store {
 	w := wal.Init()
 	return &Store{
-		store: make(map[string]string),
+		Store: make(map[string]string),
 		wal: w,
+		Mu: &sync.RWMutex{},
 	}
 }
 
 func (s *Store) Get(key string) (string, error) {
-	val, isFound := s.store[key]
+	s.Mu.RLock()
+	defer s.Mu.RUnlock()
+	val, isFound := s.Store[key]
 
 	if !isFound {
 		return "", errors.New("key not found")
@@ -31,24 +36,30 @@ func (s *Store) Get(key string) (string, error) {
 }
 
 func (s *Store) Put(key string,value string) (bool,error){
-	_ , isFound := s.store[key]
+	s.Mu.Lock()
+	defer s.Mu.Unlock()
+	_ , isFound := s.Store[key]
 
 	if isFound {
 		return false, errors.New("key already exist")
 	}
-	s.store[key] = value
+	s.Store[key] = value
 	s.wal.Write([]byte(fmt.Sprintf("%v %v %v %v",key,value,false,time.Now().UnixMicro())))
 	return true,nil
 }
 
 func (s *Store) Upsert(key string,value string) (bool , error){
-	s.store[key] = value
+	s.Mu.Lock()
+	defer s.Mu.Unlock()
+	s.Store[key] = value
 	s.wal.Write([]byte(fmt.Sprintf("%v %v %v %v",key,value,false,time.Now().UnixMicro())))
 	return true , nil
 }
 
 func (s *Store) Delete(key string,value string) (bool,error){
-	delete(s.store,key)
+	s.Mu.Lock()
+	defer s.Mu.Unlock()
+	delete(s.Store,key)
 	s.wal.Write([]byte(fmt.Sprintf("%v %v %v %v",key,value,true,time.Now().UnixMicro())))
 	return true, nil
 }
