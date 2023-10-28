@@ -17,7 +17,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), "store", store))
 
 	defer cancel()
-	cmd.Execute(ctx)
+	go cmd.Execute(ctx)
 
 	systemExitChan := make(chan os.Signal, 1)
 	signal.Notify(systemExitChan,syscall.SIGINT,syscall.SIGTERM)
