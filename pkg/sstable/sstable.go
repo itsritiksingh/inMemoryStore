@@ -96,7 +96,6 @@ func mergeSSTables(){
 			matchingFiles = matchingFiles[2:]
 		}
 	}
-	
 }
 
 func merge(file1 string, file2 string) (string ,error){
