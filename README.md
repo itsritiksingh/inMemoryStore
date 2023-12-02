@@ -5,6 +5,8 @@
 - [Features](#features)
 - [Getting Started](#getting-started)
   - [Installation](#installation)
+  - [Usage](#usage)
+  - [Usage via cli](#usage-via-cli)
 - [How it Works](#how-it-works)
   - [Write Ahead Log (WAL)](#write-ahead-log-wal)
   - [String Sorted Tables (SSTables)](#string-sorted-tables-sstables)
@@ -13,6 +15,8 @@
 ## Introduction
 
 This is an in-memory key-value store written in Go, designed to provide tolerance against system crashes. It achieves crash tolerance through the use of a Write Ahead Log (WAL) and String Sorted Tables (SSTables). This library is suitable for scenarios where you need a fast, efficient, and crash-resistant in-memory key-value store for your Go applications.
+
+### Inspired From : "The Log-Structured Merge-Tree (LSM-Tree)" by Patrick O'Neil, Edward Cheng, Dieter Gawlick, and Elizabeth O'Neil (1996)
 
 ## Features
 
@@ -33,6 +37,35 @@ You can install this library using Go modules. To add it to your project, run:
 go get github.com/itsritiksingh/inMemoryStore
 ```
 
+### Usage
+```go
+func main() {
+	store := store.Init()
+	store.Put("hello", "world")
+	store.Put("key","value")
+	store.Upsert("hello", "world1")
+
+	err , val := store.Get("hello")
+	if err != nil {
+		fmt.Errorf("error fetching key %v",err)
+	}
+	fmt.Println(val)
+	fmt.Println(store.GetAllKeys())
+}
+```
+
+### Usage via cli
+```bash
+#list all keys
+keys
+
+#get a value
+get <keyname>
+
+#store a key value pair
+set <key> <value>
+
+```
 ## How it Works
 
 ### Write Ahead Log (WAL)
